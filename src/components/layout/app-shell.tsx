@@ -19,13 +19,18 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   const [open, setOpen] = useState(false);
   const company = useMemo(() => (typeof window !== 'undefined' ? localStorage.getItem('companyName') || 'Your Company' : 'Your Company'), []);
 
+  const activeHref =
+    nav
+      .filter((item) => path === item.href || path?.startsWith(`${item.href}/`))
+      .sort((a, b) => b.href.length - a.href.length)[0]?.href || '';
+
   return (
     <div className="app-shell flex">
       <aside className={`fixed md:static z-30 top-0 left-0 h-screen w-72 bg-[var(--sidebar)] p-4 transition-transform ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="flex items-center gap-2 text-white font-semibold px-2 py-3"><Truck size={18} /> FleetInvoice Pro</div>
         <nav className="mt-4 space-y-1">
           {nav.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={`sidebar-nav-link ${path?.startsWith(href) ? 'active' : ''}`} onClick={() => setOpen(false)}>
+            <Link key={href} href={href} className={`sidebar-nav-link ${activeHref === href ? 'active' : ''}`} onClick={() => setOpen(false)}>
               <Icon size={16} /> {label}
             </Link>
           ))}
