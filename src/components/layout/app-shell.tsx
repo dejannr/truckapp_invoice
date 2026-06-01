@@ -2,7 +2,8 @@
 import { Bell, Building2, CircleUserRound, FileSpreadsheet, FileUp, LayoutDashboard, Menu, Search, Settings, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { clearCookie, getCookie } from '@/lib/session';
 
 const nav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -17,7 +18,11 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   const path = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const company = useMemo(() => (typeof window !== 'undefined' ? localStorage.getItem('companyName') || 'Your Company' : 'Your Company'), []);
+  const [company, setCompany] = useState('Your Company');
+  useEffect(() => {
+    const stored = getCookie('company_name');
+    if (stored) setCompany(stored);
+  }, []);
 
   const activeHref =
     nav
@@ -26,7 +31,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
 
   return (
     <div className="app-shell flex">
-      <aside className={`fixed md:static z-30 top-0 left-0 h-screen w-72 bg-[var(--sidebar)] p-4 transition-transform ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`fixed z-30 top-0 left-0 h-screen w-72 bg-[var(--sidebar)] p-4 transition-transform ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="flex items-center gap-2 text-white font-semibold px-2 py-3"><Truck size={18} /> FleetInvoice Pro</div>
         <nav className="mt-4 space-y-1">
           {nav.map(({ href, label, icon: Icon }) => (
@@ -35,10 +40,10 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
             </Link>
           ))}
         </nav>
-        <button className="mt-6 sidebar-nav-link w-full" onClick={() => { localStorage.removeItem('token'); router.push('/login'); }}>Logout</button>
+        <button className="mt-6 sidebar-nav-link w-full" onClick={() => { clearCookie('auth_token'); clearCookie('company_name'); router.push('/login'); }}>Logout</button>
       </aside>
 
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 md:ml-72">
         <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-white/95 backdrop-blur">
           <div className="px-4 md:px-6 py-3 flex items-center gap-3">
             <button className="md:hidden btn btn-secondary" onClick={() => setOpen(!open)}><Menu size={16} /></button>
