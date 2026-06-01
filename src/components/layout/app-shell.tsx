@@ -3,7 +3,8 @@ import { Bell, Building2, CircleUserRound, FileSpreadsheet, FileUp, LayoutDashbo
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
-import { clearCookie, getCookie } from '@/lib/session';
+import { api } from '@/lib/api';
+import { getCookie } from '@/lib/session';
 
 const nav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -40,7 +41,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
             </Link>
           ))}
         </nav>
-        <button className="mt-6 sidebar-nav-link w-full" onClick={() => { clearCookie('auth_token'); clearCookie('company_name'); router.push('/login'); }}>Logout</button>
+        <button className="mt-6 sidebar-nav-link w-full" onClick={async () => { try { await api('/auth/logout', { method: 'POST' }); } catch {} router.push('/login'); }}>Logout</button>
       </aside>
 
       <main className="flex-1 min-w-0 md:ml-72">

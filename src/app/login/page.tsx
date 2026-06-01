@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { api } from '@/lib/api';
-import { setCookie } from '@/lib/session';
 
 export default function Login() {
   const router = useRouter();
@@ -20,7 +19,7 @@ export default function Login() {
           <input className="input" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <input className="input" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <button className="btn btn-primary w-full" onClick={async () => { try { const res = await api('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) }); setCookie('auth_token', res.accessToken, 7); if (res.user?.company?.name) setCookie('company_name', res.user.company.name, 7); router.push('/dashboard'); } catch (e: any) { setError(e.message || 'Invalid credentials'); } }}>Login</button>
+          <button className="btn btn-primary w-full" onClick={async () => { try { await api('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) }); router.push('/dashboard'); } catch (e: any) { setError(e.message || 'Invalid credentials'); } }}>Login</button>
           <p className="text-sm text-[var(--muted)]">No account? <Link href="/register" className="text-blue-600">Create one</Link></p>
         </div>
       </div>
