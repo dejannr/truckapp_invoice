@@ -26,6 +26,13 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
     api('/auth/me').then((res) => setRole(res?.role || '')).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   const visibleNav = nav.filter((item) => !item.adminOnly || role === 'SUPER_ADMIN');
 
   const activeHref =
@@ -35,6 +42,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
 
   return (
     <div className="app-shell flex">
+      {open && <button aria-label="Close sidebar" className="fixed inset-0 z-20 bg-black/35 md:hidden" onClick={() => setOpen(false)} />}
       <aside className={`fixed z-30 top-0 left-0 h-screen w-72 bg-[var(--sidebar)] p-4 transition-transform ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="flex items-center gap-2 text-white font-semibold px-2 py-3"><Truck size={18} /> FleetInvoice Pro</div>
         <nav className="mt-4 space-y-1">
@@ -53,7 +61,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
             <button className="md:hidden btn btn-secondary" onClick={() => setOpen(!open)}><Menu size={16} /></button>
             <div>
               <p className="text-sm text-[var(--muted)]">Operations</p>
-              <h1 className="text-xl font-semibold">{title}</h1>
+              <h1 className="text-lg md:text-xl font-semibold leading-tight">{title}</h1>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <div className="hidden md:flex items-center gap-2 border border-[var(--border)] rounded-xl px-3 py-2 bg-[var(--surface-2)] text-sm text-[var(--muted)]"><Search size={15} /> Search loads, brokers, invoices...</div>
