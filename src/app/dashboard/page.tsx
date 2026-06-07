@@ -13,7 +13,7 @@ export default function DashboardPage() {
     ['Unpaid Amount', `$${Number(data.totalRevenue || 0).toFixed(2)}`],
     ['Paid Amount', '$0.00'],
     ['Drafts', data.needsReviewInvoices],
-    ['Remaining Free Invoices', `${Math.max((data.currentMonthLimit || 0) - (data.currentMonthInvoices || 0), 0)}`],
+    ['Remaining Invoices', `${Math.max((data.currentMonthLimit || 0) - (data.currentMonthInvoices || 0), 0)}`],
   ] : [];
 
   return <AppShell title="Dashboard">

@@ -22,7 +22,6 @@ export default function AdminCompanyDetailPage() {
       body: JSON.stringify({
         plan: data.plan,
         invoicePrefix: data.invoicePrefix,
-        monthlyInvoiceLimitOverride: data.monthlyInvoiceLimitOverride === '' ? null : Number(data.monthlyInvoiceLimitOverride),
       }),
     });
     const fresh = await api(`/admin/companies/${companyId}`);
@@ -56,25 +55,9 @@ export default function AdminCompanyDetailPage() {
                     <p className="font-semibold mt-1">{data.remainingInvoices}</p>
                   </div>
                   <div className="rounded-xl border border-[var(--border)] bg-slate-50/60 p-3">
-                    <p className="text-[11px] text-[var(--muted)] uppercase tracking-wide">Override</p>
-                    <p className="font-semibold mt-1">{data.monthlyInvoiceLimitOverride ?? '-'}</p>
+                    <p className="text-[11px] text-[var(--muted)] uppercase tracking-wide">Prefix</p>
+                    <p className="font-semibold mt-1">{data.invoicePrefix}</p>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold">Monthly Usage</span>
-                    <span className="text-[var(--muted)]">{data.effectiveLimit === Number.MAX_SAFE_INTEGER ? 'Unlimited' : `${Math.round((data.currentMonthInvoices / Math.max(data.effectiveLimit, 1)) * 100)}%`}</span>
-                  </div>
-                  {data.effectiveLimit === Number.MAX_SAFE_INTEGER ? (
-                    <div className="h-2 rounded-full bg-slate-100 border border-[var(--border)]" />
-                  ) : (
-                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden border border-[var(--border)]">
-                      <div
-                        className={`h-full ${data.currentMonthInvoices >= data.effectiveLimit ? 'bg-red-600' : data.currentMonthInvoices >= data.effectiveLimit * 0.8 ? 'bg-amber-500' : 'bg-green-600'}`}
-                        style={{ width: `${Math.min((data.currentMonthInvoices / Math.max(data.effectiveLimit, 1)) * 100, 100)}%` }}
-                      />
-                    </div>
-                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
@@ -176,10 +159,6 @@ export default function AdminCompanyDetailPage() {
                 <select className="select" value={data.plan} onChange={(e) => setData({ ...data, plan: e.target.value })}>
                   {plans.map((plan) => <option key={plan} value={plan}>{plan}</option>)}
                 </select>
-              </div>
-              <div>
-                <p className="text-xs text-[var(--muted)] mb-1">Monthly Override</p>
-                <input className="input" value={data.monthlyInvoiceLimitOverride ?? ''} onChange={(e) => setData({ ...data, monthlyInvoiceLimitOverride: e.target.value })} />
               </div>
               <div>
                 <p className="text-xs text-[var(--muted)] mb-1">Invoice Prefix</p>

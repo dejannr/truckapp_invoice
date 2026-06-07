@@ -69,10 +69,7 @@ export default function AdminCompaniesPage() {
                   </td>
                   <td className="min-w-64">
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-semibold">{row.currentMonthInvoices} / {row.effectiveLimit === Number.MAX_SAFE_INTEGER ? 'Unlimited' : row.effectiveLimit}</span>
-                        <span className="text-[var(--muted)]">{row.effectiveLimit === Number.MAX_SAFE_INTEGER ? 'Unlimited' : `${Math.round(usagePercent(row))}%`}</span>
-                      </div>
+                      <div className="text-sm font-semibold">{row.currentMonthInvoices} / {row.effectiveLimit === Number.MAX_SAFE_INTEGER ? 'Unlimited' : row.effectiveLimit}</div>
                       {row.effectiveLimit !== Number.MAX_SAFE_INTEGER ? (
                         <div className="h-2 rounded-full bg-slate-100 overflow-hidden border border-[var(--border)]">
                           <div className={`h-full ${usageTone(usagePercent(row))}`} style={{ width: `${usagePercent(row)}%` }} />

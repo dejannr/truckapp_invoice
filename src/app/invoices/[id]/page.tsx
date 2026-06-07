@@ -11,6 +11,7 @@ export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [invoice, setInvoice] = useState<any>(null);
   const [viewer, setViewer] = useState<{ title: string; url: string; ext: string } | null>(null);
+  const activeStep = invoice?.status === 'GENERATED' ? 3 : 1;
   useEffect(() => {
     let timer: any;
     const load = async () => {
@@ -31,6 +32,14 @@ export default function InvoiceDetailPage() {
     const ext = String(fallbackPath).toLowerCase().split('.').pop() || '';
     setViewer({ title, url, ext });
   };
+  const stepCardClass = (step: number) =>
+    `rounded-2xl border p-4 transition-colors ${
+      step === activeStep ? 'border-green-400 border-dashed bg-green-50/80' : 'border-[var(--border)] bg-white'
+    }`;
+  const stepPillClass = (step: number) =>
+    `inline-flex h-7 min-w-7 items-center justify-center rounded-full text-xs font-semibold ${
+      step === activeStep ? 'bg-green-600 text-white' : 'bg-slate-900 text-white'
+    }`;
 
   return <AppShell title="Invoice Detail">
     {!invoice ? <div className="skeleton h-60" /> : <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -114,26 +123,26 @@ export default function InvoiceDetailPage() {
             <h3 className="font-semibold">Explanation</h3>
           </div>
           <div className="card-body space-y-3">
-            <div className={`rounded-2xl border p-4 ${invoice.status === 'NEEDS_REVIEW' ? 'border-blue-300 bg-blue-50/70' : 'border-[var(--border)] bg-white'}`}>
+            <div className={stepCardClass(1)}>
               <div className="flex items-center justify-between mb-3">
-                <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-slate-900 text-white text-xs font-semibold">1</span>
+                <span className={stepPillClass(1)}>1</span>
                 <span className="text-[11px] font-semibold tracking-wide text-[var(--muted)]">STEP 1</span>
               </div>
               <p className="font-semibold text-[15px] mb-3">Review & Edit Extracted Data</p>
               <Link href={`/invoices/${id}/review`} className="btn btn-secondary w-full text-center block">Open Review Screen</Link>
             </div>
 
-            <div className={`rounded-2xl border p-4 ${invoice.status === 'GENERATED' ? 'border-green-300 bg-green-50/70' : 'border-[var(--border)] bg-white'}`}>
+            <div className={stepCardClass(2)}>
               <div className="flex items-center justify-between mb-3">
-                <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-slate-900 text-white text-xs font-semibold">2</span>
+                <span className={stepPillClass(2)}>2</span>
                 <span className="text-[11px] font-semibold tracking-wide text-[var(--muted)]">STEP 2</span>
               </div>
               <p className="font-semibold text-[15px] mb-3">Generate & Download PDF</p>
               {invoice.generatedPdfPath ? (
-                <a className="btn btn-primary w-full text-center block" href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/invoices/${id}/download`} target="_blank">Download PDF</a>
+                <a className="btn btn-secondary w-full text-center block" href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/invoices/${id}/download`} target="_blank">Download PDF</a>
               ) : (
                 <button
-                  className="btn btn-primary w-full"
+                  className="btn btn-secondary w-full"
                   onClick={async () => {
                     try {
                       await api(`/invoices/${id}/generate-pdf`, { method: 'POST' });
@@ -150,9 +159,9 @@ export default function InvoiceDetailPage() {
               )}
             </div>
 
-            <div className="rounded-2xl border border-[var(--border)] bg-white p-4">
+            <div className={stepCardClass(3)}>
               <div className="flex items-center justify-between mb-3">
-                <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-slate-900 text-white text-xs font-semibold">3</span>
+                <span className={stepPillClass(3)}>3</span>
                 <span className="text-[11px] font-semibold tracking-wide text-[var(--muted)]">STEP 3</span>
               </div>
               <p className="font-semibold text-[15px] mb-3">Send to Customer/Broker</p>
