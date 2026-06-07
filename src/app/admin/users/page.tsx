@@ -2,46 +2,43 @@
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { api } from '@/lib/api';
-import { statusBadge } from '@/lib/ui';
 
-export default function AdminInvoicesPage() {
+export default function AdminUsersPage() {
   const [rows, setRows] = useState<any[]>([]);
   useEffect(() => {
-    api('/admin/invoices').then(setRows).catch(() => setRows([]));
+    api('/admin/users').then(setRows).catch(() => setRows([]));
   }, []);
 
   return (
-    <AppShell title="Admin Invoices">
+    <AppShell title="Admin Users">
       <div className="card">
         <div className="card-header">
-          <h3 className="font-semibold">All Invoices</h3>
+          <h3 className="font-semibold">Users</h3>
         </div>
         <div className="card-body table-wrap">
           <table className="table">
             <thead>
               <tr>
-                <th>Invoice</th>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Role</th>
                 <th>Company</th>
-                <th>Broker</th>
-                <th>Amount</th>
-                <th>Status</th>
                 <th>Created</th>
               </tr>
             </thead>
             <tbody>
-              {rows.slice(0, 200).map((row) => (
+              {rows.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.invoiceNumber || row.id.slice(0, 8)}</td>
+                  <td>{row.email}</td>
+                  <td>{[row.firstName, row.lastName].filter(Boolean).join(' ') || '-'}</td>
+                  <td>{row.role}</td>
                   <td>{row.company?.name || '-'}</td>
-                  <td>{row.brokerName || '-'}</td>
-                  <td>${row.totalAmount || 0}</td>
-                  <td>{statusBadge(row.status)}</td>
                   <td>{new Date(row.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {rows.length === 0 && <p className="text-sm text-[var(--muted)]">No invoices found.</p>}
+          {rows.length === 0 && <p className="text-sm text-[var(--muted)]">No users found.</p>}
         </div>
       </div>
     </AppShell>

@@ -1,5 +1,5 @@
 'use client';
-import { Bell, Building2, CircleUserRound, FileSpreadsheet, FileUp, LayoutDashboard, Menu, Search, Settings, Truck } from 'lucide-react';
+import { Bell, CircleUserRound, FileSpreadsheet, FileUp, LayoutDashboard, Menu, Search, Settings, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
@@ -10,9 +10,8 @@ const nav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/invoices/new', label: 'Create Invoice', icon: FileUp },
   { href: '/invoices', label: 'Invoices', icon: FileSpreadsheet },
-  { href: '/documents', label: 'Documents', icon: Truck },
-  { href: '/customers', label: 'Customers/Brokers', icon: Building2 },
   { href: '/settings/company', label: 'Settings', icon: Settings },
+  { href: '/admin', label: 'Admin Panel', icon: CircleUserRound, adminOnly: true },
 ];
 
 export function AppShell({ title, children }: { title: string; children: ReactNode }) {
@@ -20,13 +19,17 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [company, setCompany] = useState('Your Company');
+  const [role, setRole] = useState<string>('');
   useEffect(() => {
     const stored = getCookie('company_name');
     if (stored) setCompany(stored);
+    api('/auth/me').then((res) => setRole(res?.role || '')).catch(() => {});
   }, []);
 
+  const visibleNav = nav.filter((item) => !item.adminOnly || role === 'SUPER_ADMIN');
+
   const activeHref =
-    nav
+    visibleNav
       .filter((item) => path === item.href || path?.startsWith(`${item.href}/`))
       .sort((a, b) => b.href.length - a.href.length)[0]?.href || '';
 
@@ -35,7 +38,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
       <aside className={`fixed z-30 top-0 left-0 h-screen w-72 bg-[var(--sidebar)] p-4 transition-transform ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="flex items-center gap-2 text-white font-semibold px-2 py-3"><Truck size={18} /> FleetInvoice Pro</div>
         <nav className="mt-4 space-y-1">
-          {nav.map(({ href, label, icon: Icon }) => (
+          {visibleNav.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} className={`sidebar-nav-link ${activeHref === href ? 'active' : ''}`} onClick={() => setOpen(false)}>
               <Icon size={16} /> {label}
             </Link>
