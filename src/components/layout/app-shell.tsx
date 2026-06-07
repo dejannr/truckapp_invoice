@@ -59,10 +59,14 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-white/95 backdrop-blur">
           <div className="px-4 md:px-6 py-3 flex items-center gap-3">
             <button className="md:hidden btn btn-secondary" onClick={() => setOpen(!open)}><Menu size={16} /></button>
-            <div>
-              <p className="text-sm text-[var(--muted)]">Operations</p>
-              <h1 className="text-lg md:text-xl font-semibold leading-tight">{title}</h1>
-            </div>
+            {title ? (
+              <div>
+                <p className="text-sm text-[var(--muted)]">Operations</p>
+                <h1 className="text-lg md:text-xl font-semibold leading-tight">{title}</h1>
+              </div>
+            ) : (
+              <div className="flex-1" />
+            )}
             <div className="ml-auto flex items-center gap-2">
               <div className="hidden md:flex items-center gap-2 border border-[var(--border)] rounded-xl px-3 py-2 bg-[var(--surface-2)] text-sm text-[var(--muted)]"><Search size={15} /> Search loads, brokers, invoices...</div>
               <button className="btn btn-secondary"><Bell size={15} /></button>

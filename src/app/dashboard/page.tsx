@@ -28,6 +28,17 @@ function chartTone(percent: number) {
   return 'bg-blue-600';
 }
 
+function statusTone(key?: string) {
+  const s = (key || '').toUpperCase();
+  if (s === 'NEEDS_REVIEW') return 'bg-amber-500';
+  if (s === 'FAILED') return 'bg-red-500';
+  if (s === 'EXTRACTING') return 'bg-blue-500';
+  if (s === 'UPLOADED') return 'bg-slate-400';
+  if (s === 'GENERATED') return 'bg-green-500';
+  if (s === 'SENT') return 'bg-green-600';
+  return 'bg-slate-400';
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<any | null>(null);
@@ -60,6 +71,8 @@ export default function DashboardPage() {
   const attentionCount = needsReview + failed;
   const weeklyInvoiceValue = Array.isArray(summary.weeklyInvoiceValue) ? summary.weeklyInvoiceValue : [];
   const weeklyMax = weeklyInvoiceValue.reduce((max: number, item: any) => Math.max(max, Number(item.value || 0)), 0) || 1;
+  const statusBreakdown = Array.isArray(summary.statusBreakdown) ? summary.statusBreakdown : [];
+  const statusMax = statusBreakdown.reduce((max: number, item: any) => Math.max(max, Number(item.count || 0)), 0) || 1;
 
   const kpis = [
     { label: 'Total Invoice Value', value: money(summary.totalInvoiceValue) },
@@ -69,7 +82,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <AppShell title="Dashboard">
+    <AppShell title="">
       {data === null ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -113,7 +126,7 @@ export default function DashboardPage() {
               <div className="card-header">
                 <h3 className="font-semibold">Monthly Usage</h3>
               </div>
-              <div className="card-body space-y-4">
+              <div className="card-body space-y-3">
                 <div className="flex items-end justify-between gap-3">
                   <p className="text-sm text-[var(--muted)]">Invoices used</p>
                   <p className="text-sm font-semibold text-slate-900">
@@ -142,43 +155,46 @@ export default function DashboardPage() {
               <div className="card-header">
                 <h3 className="font-semibold">Needs Attention</h3>
               </div>
-              <div className="card-body">
+              <div className="card-body space-y-2">
                 {attentionCount ? (
-                  <div className="space-y-2">
+                  <>
                     {needsReview > 0 && (
                       <Link
                         href="/invoices?status=NEEDS_REVIEW"
-                        className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-3 hover:bg-white transition-colors"
+                        className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-2.5 hover:bg-white transition-colors"
                       >
                         <span className="text-sm font-medium text-slate-900">{needsReview} need review</span>
-                        <ArrowRight size={15} className="text-[var(--muted)]" />
+                        <ArrowRight size={14} className="text-[var(--muted)]" />
                       </Link>
                     )}
                     {failed > 0 && (
                       <Link
                         href="/invoices?status=FAILED"
-                        className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-3 hover:bg-white transition-colors"
+                        className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-2.5 hover:bg-white transition-colors"
                       >
                         <span className="text-sm font-medium text-slate-900">{failed} problem{failed === 1 ? '' : 's'}</span>
-                        <ArrowRight size={15} className="text-[var(--muted)]" />
+                        <ArrowRight size={14} className="text-[var(--muted)]" />
                       </Link>
                     )}
-                  </div>
+                  </>
                 ) : (
-                  <div className="rounded-xl border border-dashed border-[var(--border)] bg-slate-50 px-4 py-6">
+                  <div className="rounded-lg border border-dashed border-[var(--border)] bg-slate-50 px-4 py-5">
                     <p className="font-medium text-slate-900">No invoices need attention.</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="card">
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <div className="card xl:col-span-2">
               <div className="card-header">
                 <h3 className="font-semibold">Invoice Value This Month</h3>
               </div>
               <div className="card-body">
                 {weeklyInvoiceValue.length ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="flex items-end justify-between gap-3">
                       <div>
                         <p className="text-sm text-[var(--muted)]">Current month total</p>
@@ -189,14 +205,14 @@ export default function DashboardPage() {
                         <p className="mt-1 text-lg font-semibold text-slate-900">{currentMonthInvoices}</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-5 items-end gap-2 h-40">
+                    <div className="grid grid-cols-5 items-end gap-1.5 h-32">
                       {weeklyInvoiceValue.map((item: any) => {
-                        const percent = Math.max((Number(item.value || 0) / weeklyMax) * 100, Number(item.value || 0) > 0 ? 8 : 0);
+                        const percent = Math.max((Number(item.value || 0) / weeklyMax) * 100, Number(item.value || 0) > 0 ? 10 : 0);
                         return (
-                          <div key={item.week} className="flex h-full flex-col justify-end gap-2">
+                          <div key={item.week} className="flex h-full flex-col justify-end gap-1.5">
                             <div className="relative flex-1 flex items-end">
                               <div
-                                className={`w-full rounded-t-xl ${chartTone(percent)} transition-all`}
+                                className={`w-full rounded-t-lg ${chartTone(percent)} transition-all`}
                                 style={{ height: `${percent}%` }}
                                 title={`Week ${item.week}: ${money(item.value)} (${item.count} invoices)`}
                               />
@@ -213,6 +229,38 @@ export default function DashboardPage() {
                 ) : (
                   <div className="rounded-xl border border-dashed border-[var(--border)] bg-slate-50 px-4 py-6">
                     <p className="text-sm font-medium text-slate-900">No chart data yet.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-header">
+                <h3 className="font-semibold">Invoice Status</h3>
+              </div>
+              <div className="card-body space-y-2.5">
+                {statusBreakdown.length ? (
+                  statusBreakdown.map((item: any) => {
+                    const percent = Math.max((Number(item.count || 0) / statusMax) * 100, Number(item.count || 0) > 0 ? 10 : 0);
+                    return (
+                      <Link
+                        key={item.key}
+                        href={item.href}
+                        className="block rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-2.5 hover:bg-white transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium text-slate-900 leading-none">{item.label}</span>
+                          <span className="text-sm font-semibold text-slate-900 leading-none">{item.count}</span>
+                        </div>
+                        <div className="mt-2.5 h-1.5 rounded-full bg-slate-100 border border-[var(--border)] overflow-hidden">
+                          <div className={`h-full ${statusTone(item.key)}`} style={{ width: `${percent}%` }} />
+                        </div>
+                      </Link>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-lg border border-dashed border-[var(--border)] bg-slate-50 px-4 py-5">
+                    <p className="text-sm font-medium text-slate-900">No status data yet.</p>
                   </div>
                 )}
               </div>
