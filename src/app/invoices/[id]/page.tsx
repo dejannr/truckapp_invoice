@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Check, Eye, RefreshCw, X } from 'lucide-react';
 import { AppShell } from '@/components/layout/app-shell';
@@ -11,6 +11,7 @@ import { statusBadge } from '@/lib/ui';
 
 export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const [invoice, setInvoice] = useState<any>(null);
   const [viewer, setViewer] = useState<{ title: string; url: string; ext: string } | null>(null);
   const [actionMsg, setActionMsg] = useState('');
@@ -31,7 +32,9 @@ export default function InvoiceDetailPage() {
   const isNeedsReview = invoice?.status === 'NEEDS_REVIEW';
   const isGenerated = invoice?.status === 'GENERATED';
   const isSent = invoice?.status === 'SENT';
-  const currentStep = isSent ? 4 : isGenerated ? 3 : isNeedsReview ? 2 : 1;
+  const editMode = searchParams.get('edit') === '1';
+  const inReviewMode = isNeedsReview || editMode;
+  const currentStep = inReviewMode ? 2 : isSent ? 4 : isGenerated ? 3 : 1;
   const readyToGenerate = Boolean(
     invoice &&
       invoice.brokerName &&
@@ -189,7 +192,7 @@ export default function InvoiceDetailPage() {
               </div>
             )}
 
-            {isNeedsReview && (
+            {inReviewMode && (
               <InvoiceReviewWorkspace
                 invoice={invoice}
                 setInvoice={setInvoice}
@@ -200,31 +203,8 @@ export default function InvoiceDetailPage() {
               />
             )}
 
-            {!isExtracting && !isFailed && !isNeedsReview && (
+            {!isExtracting && !isFailed && !inReviewMode && (
               <>
-                {(isGenerated || isSent) && invoice.generatedPdfPath && (
-                  <div className="card">
-                    <div className="card-header flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold">Generated Invoice Preview</h3>
-                        <p className="text-xs text-[var(--muted)] mt-1">
-                          {isSent ? 'This invoice was sent. Edit data and regenerate if you need changes.' : 'Editing invoice data requires regenerating the PDF.'}
-                        </p>
-                      </div>
-                      <span className={`badge ${isSent ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>{isSent ? 'Sent' : 'Generated'}</span>
-                    </div>
-                    <div className="card-body">
-                      <div className="rounded-2xl border border-[var(--border)] bg-slate-100 overflow-hidden">
-                        <iframe
-                          title="Generated Invoice Preview"
-                          src={fileUrl('generated')}
-                          className="w-full h-[820px] border-0"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 <div className="bg-white border border-[var(--border)] rounded-2xl p-6 space-y-5">
                   <div className="flex items-start justify-between border-b border-[var(--border)] pb-3">
                     <div>
@@ -265,6 +245,27 @@ export default function InvoiceDetailPage() {
                     <p className="mt-3 text-lg font-semibold">Total: ${invoice.totalAmount || 0}</p>
                   </div>
                 </div>
+
+                {(isGenerated || isSent) && invoice.generatedPdfPath && (
+                  <div className="card">
+                    <div className="card-header flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold">PDF Preview</h3>
+                        <p className="text-xs text-[var(--muted)] mt-1">Open the generated invoice before downloading or sending it again.</p>
+                      </div>
+                      <span className={`badge ${isSent ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>{isSent ? 'Sent' : 'Generated'}</span>
+                    </div>
+                    <div className="card-body">
+                      <div className="rounded-2xl border border-[var(--border)] bg-slate-100 overflow-hidden">
+                        <iframe
+                          title="Generated Invoice Preview"
+                          src={fileUrl('generated')}
+                          className="w-full h-[820px] border-0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="card">
                   <div className="card-header">
@@ -352,40 +353,48 @@ export default function InvoiceDetailPage() {
                   {workflowSteps.map((step) => {
                     const isCurrent = step.number === currentStep;
                     const isDone = step.number < currentStep;
-                    return (
+                    const StepInner = (
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold ${
+                            isCurrent
+                              ? 'border-green-600 bg-green-600 text-white'
+                              : isDone
+                                ? 'border-green-200 bg-green-50 text-green-700'
+                                : 'border-[var(--border)] bg-slate-50 text-slate-500'
+                          }`}
+                        >
+                          {isDone ? <Check size={14} /> : step.number}
+                        </div>
+                        <p className={`text-sm font-medium ${isCurrent ? 'text-green-900' : isDone ? 'text-slate-900' : 'text-[var(--muted)]'}`}>
+                          {step.label}
+                        </p>
+                      </div>
+                    );
+
+                    const StepCard = (
                       <div
-                        key={step.number}
                         className={`rounded-2xl border p-3 transition-colors ${
                           isCurrent ? 'border-green-400 border-dashed bg-green-50/80' : 'border-[var(--border)] bg-white'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold ${
-                              isCurrent
-                                ? 'border-green-600 bg-green-600 text-white'
-                                : isDone
-                                  ? 'border-green-200 bg-green-50 text-green-700'
-                                  : 'border-[var(--border)] bg-slate-50 text-slate-500'
-                            }`}
-                          >
-                            {isDone ? <Check size={14} /> : step.number}
-                          </div>
-                          <p className={`text-sm font-medium ${isCurrent ? 'text-green-900' : isDone ? 'text-slate-900' : 'text-[var(--muted)]'}`}>
-                            {step.label}
-                          </p>
-                        </div>
+                        {StepInner}
                       </div>
                     );
+
+                    if (step.number === 2 && !inReviewMode) {
+                      return (
+                        <Link key={step.number} href={`/invoices/${id}?edit=1`} className="block">
+                          {StepCard}
+                        </Link>
+                      );
+                    }
+
+                    return <div key={step.number}>{StepCard}</div>;
                   })}
                 </div>
 
                 <div className="pt-2 border-t border-[var(--border)]">
-                  {isNeedsReview && (
-                    <button className="btn btn-secondary w-full" disabled>
-                      Review details in the workspace
-                    </button>
-                  )}
                   {(isGenerated || isSent) && invoice.generatedPdfPath && (
                     <a
                       className="btn btn-secondary w-full text-center block"
@@ -421,7 +430,7 @@ export default function InvoiceDetailPage() {
                   <Link href="/invoices" className="btn btn-secondary !rounded-full !px-4 !py-2 text-center shrink-0">
                     Back
                   </Link>
-                  {isNeedsReview && (
+                  {inReviewMode && (
                     <>
                       <button
                         className="btn btn-secondary !rounded-full !px-4 !py-2 shrink-0"
@@ -449,10 +458,10 @@ export default function InvoiceDetailPage() {
                       </button>
                     </>
                   )}
-                  {(isGenerated || isSent) && (
+                  {!inReviewMode && (isGenerated || isSent) && (
                     <>
-                      <Link href={`/invoices/${id}/review`} className="btn btn-secondary !rounded-full !px-4 !py-2 text-center shrink-0">
-                        Edit
+                      <Link href={`/invoices/${id}?edit=1`} className="btn btn-secondary !rounded-full !px-4 !py-2 text-center shrink-0">
+                        Edit Invoice
                       </Link>
                       {invoice.generatedPdfPath && (
                         <a

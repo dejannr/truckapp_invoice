@@ -8,7 +8,7 @@ const sections = [
   { title: 'Load Details', fields: ['loadNumber', 'bolNumber', 'poNumber', 'commodity', 'weightLbs', 'miles'] },
   { title: 'Pickup / Delivery', fields: ['pickupDate', 'pickupCity', 'pickupState', 'deliveryDate', 'deliveryCity', 'deliveryState'] },
   { title: 'Charges', fields: ['lineHaulAmount', 'fuelSurchargeAmount', 'accessorialAmount', 'detentionAmount', 'lumperAmount', 'otherAmount', 'totalAmount'] },
-  { title: 'Documents', fields: ['notes'] },
+  { title: 'Notes', fields: ['notes'] },
 ];
 
 const requiredFields = new Set(['brokerName', 'totalAmount', 'pickupCity', 'pickupDate', 'deliveryCity', 'deliveryDate']);
@@ -18,7 +18,7 @@ const sectionKeys: Record<string, string> = {
   'Load Details': 'loadDetails',
   'Pickup / Delivery': 'pickupDelivery',
   Charges: 'charges',
-  Documents: 'documents',
+  Notes: 'notes',
 };
 
 function toLabel(field: string) {
