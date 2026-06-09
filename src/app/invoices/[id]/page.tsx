@@ -40,6 +40,7 @@ export default function InvoiceDetailPage() {
     invoice &&
       invoice.brokerName &&
       invoice.totalAmount &&
+      (invoice.loadNumber || invoice.bolNumber) &&
       (invoice.pickupCity || invoice.pickupDate) &&
       (invoice.deliveryCity || invoice.deliveryDate),
   );

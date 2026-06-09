@@ -46,6 +46,23 @@ function moneyLabel(value: any) {
   return Number.isFinite(n) ? `$${n.toFixed(2)}` : '$0.00';
 }
 
+function formatMissingLabel(value: string) {
+  if (value === 'loadNumber or bolNumber') return 'Load Number or BOL Number';
+  if (value === 'pickupCity or pickupDate') return 'Pickup City or Pickup Date';
+  if (value === 'deliveryCity or deliveryDate') return 'Delivery City or Delivery Date';
+  return toLabel(value);
+}
+
+function dateValue(value: any) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 type Props = {
   invoice: any;
   setInvoice: (next: any) => void;
@@ -76,6 +93,7 @@ export function InvoiceReviewWorkspace({ invoice, setInvoice, onSave, onGenerate
 
   const missing = useMemo(() => {
     const list = ['brokerName', 'totalAmount'].filter((f) => fieldMissing(invoice, f));
+    if (!(invoice.loadNumber || invoice.bolNumber)) list.push('loadNumber or bolNumber');
     if (!(invoice.pickupCity || invoice.pickupDate)) list.push('pickupCity or pickupDate');
     if (!(invoice.deliveryCity || invoice.deliveryDate)) list.push('deliveryCity or deliveryDate');
     return list;
@@ -83,6 +101,7 @@ export function InvoiceReviewWorkspace({ invoice, setInvoice, onSave, onGenerate
   const firstMissingSection = useMemo(() => {
     return sections.find((section) => section.fields.some((field) => {
       if (requiredFields.has(field)) return fieldMissing(invoice, field);
+      if (section.title === 'Load Details') return !(invoice.loadNumber || invoice.bolNumber);
       if (section.title === 'Pickup / Delivery') return !((invoice.pickupCity || invoice.pickupDate) && (invoice.deliveryCity || invoice.deliveryDate));
       return false;
     }))?.title || null;
@@ -180,7 +199,7 @@ export function InvoiceReviewWorkspace({ invoice, setInvoice, onSave, onGenerate
 
         {!canGenerate && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            <strong>Missing:</strong> {missing.map(toLabel).join(', ')}
+            <strong>Missing:</strong> {missing.map(formatMissingLabel).join(', ')}
           </div>
         )}
 
@@ -202,11 +221,22 @@ export function InvoiceReviewWorkspace({ invoice, setInvoice, onSave, onGenerate
                   </span>
                 </summary>
                 <div className="px-4 pb-4">
+                  {section.title === 'Load Details' && !(invoice.loadNumber || invoice.bolNumber) && (
+                    <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      Provide a Load Number or BOL Number to generate the invoice.
+                    </div>
+                  )}
+                  {section.title === 'Pickup / Delivery' && (!((invoice.pickupCity || invoice.pickupDate) && (invoice.deliveryCity || invoice.deliveryDate))) && (
+                    <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      Provide pickup and delivery details to generate the invoice.
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {section.fields.map((field) => {
                       const isRequired = requiredFields.has(field);
                       const isPairField = field === 'pickupCity' || field === 'pickupDate' || field === 'deliveryCity' || field === 'deliveryDate';
-                      const isMissing = fieldMissing(invoice, field) && (isRequired || isPairField);
+                      const isLoadField = field === 'loadNumber' || field === 'bolNumber';
+                      const isMissing = fieldMissing(invoice, field) && (isRequired || isPairField || isLoadField);
                       const type = field.toLowerCase().includes('date') ? 'date' : field.toLowerCase().includes('amount') || ['weightLbs', 'miles'].includes(field) ? 'number' : 'text';
                       const fieldScore = fieldConfidence(section.title, field);
                       const showCheck = fieldScore != null && fieldScore < 0.75 && !isMissing;
@@ -219,7 +249,7 @@ export function InvoiceReviewWorkspace({ invoice, setInvoice, onSave, onGenerate
                             type={type}
                             inputMode={type === 'number' ? 'decimal' : undefined}
                             className={`input ${isMissing ? 'border-amber-300 bg-amber-50' : ''}`}
-                            value={draft[field] ?? ''}
+                            value={type === 'date' ? dateValue(draft[field]) : draft[field] ?? ''}
                             onChange={(e) => {
                               const next = { ...draft, [field]: e.target.value };
                               setDraft(next);
@@ -231,10 +261,15 @@ export function InvoiceReviewWorkspace({ invoice, setInvoice, onSave, onGenerate
                               }, 900);
                             }}
                             placeholder={`Enter ${toLabel(field)}`}
-                            />
+                          />
                           {showCheck && (
                             <p className="mt-1 text-[11px] text-amber-700">
                               Check this field
+                            </p>
+                          )}
+                          {isLoadField && !(invoice.loadNumber || invoice.bolNumber) && (
+                            <p className="mt-1 text-[11px] text-amber-700">
+                              One load identifier is required.
                             </p>
                           )}
                         </div>
