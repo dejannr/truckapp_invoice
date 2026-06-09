@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Check, Eye, RefreshCw, X } from 'lucide-react';
 import { AppShell } from '@/components/layout/app-shell';
@@ -11,6 +11,7 @@ import { statusBadge } from '@/lib/ui';
 
 export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [invoice, setInvoice] = useState<any>(null);
   const [viewer, setViewer] = useState<{ title: string; url: string; ext: string } | null>(null);
@@ -448,6 +449,7 @@ export default function InvoiceDetailPage() {
                           try {
                             await saveReview(invoice);
                             await generatePdf();
+                            router.replace(`/invoices/${id}`);
                             setActionMsg('Invoice generated. You can download it now.');
                           } catch (e: any) {
                             setActionMsg(e?.message || 'Generation failed');
